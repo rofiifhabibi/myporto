@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import * as THREE from 'three';
 import heroimg from './assets/y.jpg';
 
@@ -269,13 +270,16 @@ function BinaryRow({ text, idx, revealed, onReveal }) {
 }
 
 /* ─── Main App ──────────────────────────────────────────────────────────────── */
-export default function App({ navigate }) {
+export default function App() {
+  const navigate = useNavigate();
   const [revealed, setRevealed] = useState({});
   const [glitch, setGlitch]     = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
   const [progress, setProgress] = useState(0);
   const idleTimer = useRef(null);
+  const redirectDelayTimer = useRef(null);
+  const redirectIntervalTimer = useRef(null);
 
   const handleReveal = useCallback((idx) => {
     setRevealed(prev => ({ ...prev, [idx]: true }));
@@ -290,28 +294,41 @@ export default function App({ navigate }) {
   /* auto-redirect when all revealed */
   useEffect(() => {
     if (revealedCount < TEXTS.length) return;
-    const delay = setTimeout(() => {
+    redirectDelayTimer.current = setTimeout(() => {
       setRedirecting(true);
+      setProgress(0);
       /* animate progress bar then navigate */
       let p = 0;
-      const iv = setInterval(() => {
+      redirectIntervalTimer.current = setInterval(() => {
         p += 2;
         setProgress(p);
         if (p >= 100) {
-          clearInterval(iv);
+          clearInterval(redirectIntervalTimer.current);
+          redirectIntervalTimer.current = null;
 
-          if (typeof navigate === 'function') navigate('/mainpage');
-          else window.location.hash = '#/main'; /* fallback */
+          navigate('/mainpage');
         }
       }, 30);
     }, 800);
-    return () => clearTimeout(delay);
+    return () => {
+      clearTimeout(redirectDelayTimer.current);
+      redirectDelayTimer.current = null;
+      clearInterval(redirectIntervalTimer.current);
+      redirectIntervalTimer.current = null;
+    };
   }, [revealedCount, navigate]);
 
   /* idle hint timer – starts on mount */
   useEffect(() => {
     idleTimer.current = setTimeout(() => setShowHint(true), 5000);
     return () => clearTimeout(idleTimer.current);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      clearTimeout(redirectDelayTimer.current);
+      clearInterval(redirectIntervalTimer.current);
+    };
   }, []);
 
   /* glitch effect */
