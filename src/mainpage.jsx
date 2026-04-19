@@ -138,19 +138,18 @@ function spawnBurst(x, y) {
 
 /* ─── Binary Row ────────────────────────────────────────────────────────────── */
 function BinaryRow({ text, idx, revealed, onReveal }) {
-  const compactText = text.replace(/\s+/g, '');
-  const [display, setDisplay] = useState(() => generateBinary(compactText.length));
+  const [display, setDisplay] = useState(() => generateBinary(text.length));
   const [hovered, setHovered] = useState(false);
   const rowRef = useRef(null);
 
   const reveal = useCallback(() => {
     if (revealed) return;
     let step = 0;
-    const chars = compactText.split('').map(() => (Math.random() < 0.5 ? '0' : '1'));
+    const chars = text.split('').map(() => (Math.random() < 0.5 ? '0' : '1'));
     setDisplay(chars.join(''));
     const iv = setInterval(() => {
-      if (step < compactText.length) {
-        chars[step] = compactText[step];
+      if (step < text.length) {
+        chars[step] = text[step];
         setDisplay(chars.join(''));
         step++;
       } else {
@@ -163,14 +162,14 @@ function BinaryRow({ text, idx, revealed, onReveal }) {
         }
       }
     }, 80);
-  }, [revealed, compactText, idx, onReveal]);
+  }, [revealed, text, idx, onReveal]);
 
   /* re-randomise when not revealed and not hovered */
   useEffect(() => {
     if (revealed || hovered) return;
-    const iv = setInterval(() => setDisplay(generateBinary(compactText.length)), 400);
+    const iv = setInterval(() => setDisplay(generateBinary(text.length)), 400);
     return () => clearInterval(iv);
-  }, [revealed, hovered, compactText]);
+  }, [revealed, hovered, text]);
 
   return (
     <div
@@ -201,7 +200,7 @@ function BinaryRow({ text, idx, revealed, onReveal }) {
       }} />
 
       {/* left binary */}
-      <div style={{ flex: 1, overflow: 'hidden', textAlign: 'right', paddingRight: 20 }}>
+      <div style={{ flex: 1, overflow: 'hidden', textAlign: 'right', paddingRight: 12 }}>
         <span style={{
           fontFamily: "'Orbitron', Sans-serif",
           fontSize: 13,
@@ -216,8 +215,8 @@ function BinaryRow({ text, idx, revealed, onReveal }) {
       </div>
 
       {/* center text */}
-      <div style={{ minWidth: 260, textAlign: 'center' }}>
-        <span style={{ fontFamily: "'Orbitron', monospace", fontSize: 'clamp(12px,2vw,20px)', fontWeight: 700, letterSpacing: 0 }}>
+      <div style={{ minWidth: 240, textAlign: 'center' }}>
+        <span style={{ fontFamily: "'Orbitron', monospace", fontSize: 'clamp(12px,2vw,20px)', fontWeight: 700, letterSpacing: 4 }}>
           {display.split('').map((char, ci) => {
             const isLetter = revealed && char >= 'A' && char <= 'Z';
             return (
@@ -234,7 +233,7 @@ function BinaryRow({ text, idx, revealed, onReveal }) {
       </div>
 
       {/* right binary */}
-      <div style={{ flex: 1, overflow: 'hidden', textAlign: 'left', paddingLeft: 20 }}>
+      <div style={{ flex: 1, overflow: 'hidden', textAlign: 'left', paddingLeft: 12 }}>
         <span style={{
           fontFamily: "'Orbitron', Sans-serif",
           fontSize: 13,
@@ -283,7 +282,7 @@ export default function App({ navigate }) {
         if (p >= 100) {
           clearInterval(iv);
 
-          if (typeof navigate === 'function') navigate('/mainpage');
+          if (typeof navigate === 'function') navigate('/mainpage.jsx');
           else window.location.hash = '#/main'; /* fallback */
         }
       }, 30);
@@ -307,7 +306,7 @@ export default function App({ navigate }) {
   }, []);
 
   return (
-    <div style={{ background: '#000', minHeight: '100vh', height: '100vh', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ background: '#000', minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
 
       {/* ── Google Fonts ── */}
       <style>{`
@@ -379,14 +378,15 @@ export default function App({ navigate }) {
 
         {/* main title */}
         <h1 style={{
-          fontFamily: "'Stalinist One', Sans-serif",
+          fontFamily: "'Orbitron', monospace",
           fontWeight: 900,
+          fontSize: 'clamp(22px, 5vw, 52px)',
           color: '#fff',
           letterSpacing: 'clamp(8px, 2vw, 18px)',
           textShadow: '0 0 30px rgba(42,250,148,.2)',
           marginBottom: 14,
           textAlign: 'center',
-        }} className='text-5xl'>
+        }}>
           HELLO WORLD
         </h1>
 
@@ -481,7 +481,7 @@ export default function App({ navigate }) {
       {/* ── Idle Hint ── */}
       {showHint && revealedCount < TEXTS.length && (
         <div style={{
-          position: 'fixed', bottom: 18, left: '50%',
+          position: 'fixed', bottom: 32, left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 20, pointerEvents: 'none',
           textAlign: 'center',
