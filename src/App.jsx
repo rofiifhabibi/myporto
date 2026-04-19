@@ -55,14 +55,30 @@ function ParticleCanvas() {
     /* grid plane */
     const gridGeo = new THREE.BufferGeometry();
     const gridLines = [];
-    const GRID_SIZE = 60, STEP = 8;
-    for (let x = -GRID_SIZE; x <= GRID_SIZE; x += STEP) {
-      gridLines.push(x, -GRID_SIZE, -20, x, GRID_SIZE, -20);
-    }
-    for (let y = -GRID_SIZE; y <= GRID_SIZE; y += STEP) {
-      gridLines.push(-GRID_SIZE, y, -20, GRID_SIZE, y, -20);
-    }
-    gridGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(gridLines), 3));
+    const STEP = 8;
+    const GRID_Z = -20;
+    const rebuildGrid = () => {
+      gridLines.length = 0;
+      const distance = camera.position.z - GRID_Z;
+      const halfHeight = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * distance;
+      const halfWidth = halfHeight * camera.aspect;
+      const pad = STEP * 2;
+      const xMin = Math.floor((-halfWidth - pad) / STEP) * STEP;
+      const xMax = Math.ceil((halfWidth + pad) / STEP) * STEP;
+      const yMin = Math.floor((-halfHeight - pad) / STEP) * STEP;
+      const yMax = Math.ceil((halfHeight + pad) / STEP) * STEP;
+
+      for (let x = xMin; x <= xMax; x += STEP) {
+        gridLines.push(x, yMin, GRID_Z, x, yMax, GRID_Z);
+      }
+      for (let y = yMin; y <= yMax; y += STEP) {
+        gridLines.push(xMin, y, GRID_Z, xMax, y, GRID_Z);
+      }
+      gridGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(gridLines), 3));
+      gridGeo.computeBoundingSphere();
+    };
+
+    rebuildGrid();
     const gridMat = new THREE.LineBasicMaterial({ color: 0x0d2a1a, transparent: true, opacity: 0.5 });
     scene.add(new THREE.LineSegments(gridGeo, gridMat));
 
@@ -80,6 +96,7 @@ function ParticleCanvas() {
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
+      rebuildGrid();
     };
     window.addEventListener('resize', onResize);
 
